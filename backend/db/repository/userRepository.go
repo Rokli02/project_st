@@ -106,12 +106,10 @@ func (r *UserRepository) ModelName() string {
 }
 
 func (r *UserRepository) CreateTable() bool {
-	template := fmt.Sprintf(entity.UserTableTemplate, r.modelName)
-
-	return createTable(r.db, r.modelName, template)
+	return createTable(r.db, &entity.User{}, r.modelName)
 }
 
-func (r *UserRepository) DropTableTemplate() bool {
+func (r *UserRepository) DropTable() bool {
 	return dropTable(r.db, r.modelName)
 }
 
@@ -120,5 +118,5 @@ func (r *UserRepository) IsTableExist() bool {
 }
 
 func (r *UserRepository) Migrate() uint {
-	return migrate(r.db, r.modelName, entity.UserTableVersion, entity.UserTableMigrations)
+	return migrate(r.db, r.modelName, entity.UserTableVersion, &entity.User{})
 }

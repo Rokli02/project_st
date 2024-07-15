@@ -3,27 +3,27 @@ package entity
 import "st/backend/db"
 
 type User struct {
-	Id        int64
+	Id        int64 `db_constraint:"PRIMARY KEY"`
 	Name      string
-	Login     string
-	Password  string
+	Login     string `db_constraint:"UNIQUE NOT NULL"`
+	Password  string `db_constraint:"NOT NULL"`
 	DBPath    string
-	CreatedAt string
+	CreatedAt string `db_constraint:"DEFAULT CURRENT_TIMESTAMP"`
 }
 
 var _ db.Model = (*User)(nil)
 
-var UserTableTemplate string = `CREATE TABLE %s (
-	id INTEGER PRIMARY KEY,
-	name TEXT,
-	login TEXT NOT NULL UNIQUE,
-	password TEXT NOT NULL,
-	dbPath TEXT
-);`
+func (s *User) TableTemplate() (string, error) {
+	return generateTableTemplate(*s)
+}
+
+func (*User) Migrations() []db.Migration {
+	return userTableMigrations
+}
 
 var UserTableVersion uint = 0
 
-var UserTableMigrations = []db.Migration{
+var userTableMigrations = []db.Migration{
 	{
 		Version:  1,
 		Template: "",

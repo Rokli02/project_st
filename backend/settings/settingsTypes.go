@@ -1,5 +1,9 @@
 package settings
 
+type DatabaseSettings struct {
+	BaseDatabaseName string
+}
+
 type RepositorySettings struct{}
 
 type ServiceSettings struct{}

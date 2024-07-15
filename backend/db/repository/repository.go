@@ -8,7 +8,13 @@ import (
 	"strings"
 )
 
-func createTable(db *sql.DB, modelName string, template string) bool {
+func createTable(db *sql.DB, model db.Model, modelName string) bool {
+	template, err := model.TableTemplate()
+	if err != nil {
+		logger.WarningF("Couldn't create '%s' table (%s)", modelName, err)
+		return false
+	}
+
 	res, err := db.Exec(template)
 	if err != nil {
 		logger.ErrorF("Error occured during creating table '%s' (%v)", modelName, err)
@@ -55,13 +61,13 @@ func isTableExist(db *sql.DB, modelName string) bool {
 	return true
 }
 
-func migrate(db *sql.DB, modelName string, versionUpTo uint, migrations []db.Migration) uint {
+func migrate(db *sql.DB, modelName string, versionFrom uint, model db.Model) uint {
 	sb := strings.Builder{}
+	migrations := model.Migrations()
 
 	for _, mig := range migrations {
-		if mig.Version >= versionUpTo {
-			sb.WriteString(mig.Template)
-			sb.WriteString("\n")
+		if mig.Version >= versionFrom {
+			sb.WriteString(mig.Template + "\n")
 		}
 	}
 

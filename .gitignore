@@ -1,4 +1,9 @@
 build/bin
 node_modules
-frontend/dist
-data
+frontend/dist/*
+data/*
+data/usr/*
+
+!frontend/dist/.gitkeep
+!data/usr
+!data/usr/.gitkeep

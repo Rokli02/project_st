@@ -3,28 +3,27 @@ package entity
 import "st/backend/db"
 
 type Metadata struct {
-	Id        int64
-	Key       string
-	Value     string
-	Type      string
-	UpdatedAt string
-	ExpireAt  string
+	Id        int64  `db_constraint:"PRIMARY KEY"`
+	Key       string `db_constraint:"NOT NULL"`
+	Value     string `db_constraint:"NOT NULL"`
+	Type      string `db_constraint:"DEFAULT 'app'"`
+	UpdatedAt string `db_constraint:"DEFAULT CURRENT_TIMESTAMP"`
+	ExpireAt  string `db_constraint:"DEFAULT NULL"`
 }
 
 var _ db.Model = (*Metadata)(nil)
 
-var MetadataTableTemplate string = `CREATE TABLE %s (
-	id INTEGER PRIMARY KEY,
-	Key Text NOT NULL,
-	Value Text NOT NULL,
-	Type Text DEFAULT 'app',
-	UpdatedAt Text NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	ExpireAt Text DEFAULT NULL
-);`
+func (s *Metadata) TableTemplate() (string, error) {
+	return generateTableTemplate(*s)
+}
+
+func (*Metadata) Migrations() []db.Migration {
+	return metadataTableMigrations
+}
 
 var MetadataTableVersion uint = 0
 
-var MetadataTableMigrations = []db.Migration{
+var metadataTableMigrations = []db.Migration{
 	{
 		Version:  1,
 		Template: "",

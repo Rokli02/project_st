@@ -11,7 +11,6 @@ import (
 	"strings"
 )
 
-var baseDBName string = "tester.db"
 var baseDBRepositories []db.Repository = []db.Repository{repository.UserRepo, repository.MetadataRepo}
 var userDBRepositories []db.Repository = []db.Repository{}
 
@@ -29,7 +28,7 @@ func NewApplication() *Application {
 	service.InitServices()
 
 	return &Application{
-		BaseDb:    db.NewDB(baseDBName, baseDBRepositories),
+		BaseDb:    db.NewDB(settings.Database.BaseDatabaseName, baseDBRepositories),
 		Metadatas: make(map[string]string),
 	}
 }

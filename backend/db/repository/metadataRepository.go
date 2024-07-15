@@ -2,7 +2,6 @@ package repository
 
 import (
 	"database/sql"
-	"fmt"
 	"st/backend/db"
 	"st/backend/db/entity"
 )
@@ -31,12 +30,10 @@ func (r *MetadataRepository) ModelName() string {
 }
 
 func (r *MetadataRepository) CreateTable() bool {
-	template := fmt.Sprintf(entity.MetadataTableTemplate, r.modelName)
-
-	return createTable(r.db, r.modelName, template)
+	return createTable(r.db, &entity.Metadata{}, r.modelName)
 }
 
-func (r *MetadataRepository) DropTableTemplate() bool {
+func (r *MetadataRepository) DropTable() bool {
 	return dropTable(r.db, r.modelName)
 }
 
@@ -45,5 +42,5 @@ func (r *MetadataRepository) IsTableExist() bool {
 }
 
 func (r *MetadataRepository) Migrate() uint {
-	return migrate(r.db, r.modelName, entity.MetadataTableVersion, entity.MetadataTableMigrations)
+	return migrate(r.db, r.modelName, entity.MetadataTableVersion, &entity.User{})
 }

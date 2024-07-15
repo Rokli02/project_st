@@ -18,6 +18,14 @@ type Migration struct {
 }
 
 type Model interface {
+	TableTemplate() (string, error)
+	Migrations() []Migration
+}
+
+type ModelField struct {
+	Name        string
+	Type        string
+	Constraints string
 }
 
 type Repository interface {
@@ -26,5 +34,5 @@ type Repository interface {
 	CreateTable() bool
 	IsTableExist() bool
 	Migrate() uint
-	DropTableTemplate() bool
+	DropTable() bool
 }
