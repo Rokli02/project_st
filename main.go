@@ -7,6 +7,7 @@ import (
 	"st/backend/db/entity"
 	"st/backend/db/repository"
 	"st/backend/logger"
+	"st/backend/utils"
 
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
@@ -43,11 +44,19 @@ func main() {
 	app := backend.NewApplication()
 	app.Startup(context.Background())
 
-	sRes := repository.UserRepo.Save(&entity.User{Login: "Bruh", Password: "abc"})
-	logger.Info("Saved Result:", sRes)
+	sRes := repository.User.Save(&entity.User{Login: "Bruh", Password: "abc", Name: utils.ToRef("Bakkancs Brádör")})
+	logger.Debug("Saved Result:", sRes)
 
-	fRes1 := repository.UserRepo.FindOneByLoginAndPassword("Bruh", "abc")
-	logger.Info("Find One Result:", fRes1)
+	fRes1 := repository.User.FindOneByLoginAndPassword("Bruh", "abc")
+	logger.Debug("Find One Result:", fRes1)
+	if fRes1.Name != nil {
+		logger.Debug("Name:", *fRes1.Name)
+	}
+
+	logger.Debug(repository.Metadata.FindById(1))
+	logger.Debug(repository.Metadata.FindById(3))
+	logger.Debug(repository.Metadata.FindById(2))
+	// logger.Debug(repository.Metadata.FindAll())
 
 	defer app.BaseDb.Close()
 }

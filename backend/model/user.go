@@ -4,7 +4,7 @@ import "st/backend/db/entity"
 
 type User struct {
 	Id    int64
-	Name  string
+	Name  *string
 	Login string
 }
 
@@ -15,7 +15,7 @@ type LoginUser struct {
 
 type SignUpUser struct {
 	Login    string
-	Name     string
+	Name     *string
 	Password string
 }
 

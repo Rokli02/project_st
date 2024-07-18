@@ -6,6 +6,7 @@ import (
 	"os"
 	"path"
 	"st/backend/logger"
+	"st/backend/settings"
 
 	_ "modernc.org/sqlite"
 )
@@ -31,7 +32,7 @@ func NewDB(path string, models []Repository) *DB {
 	return db
 }
 
-func (db *DB) Connect(ct ConnectTypes) error {
+func (db *DB) Connect(ct settings.ConnectTypes) error {
 	logger.InfoF("Connecting to database (%s)...", db.dbPath)
 
 	workingDirectory, _ := os.Getwd()
@@ -39,25 +40,25 @@ func (db *DB) Connect(ct ConnectTypes) error {
 
 	logger.Debug("Database path:", dbPath)
 
+	file, _ := os.OpenFile(dbPath, os.O_RDONLY, os.ModeDevice)
+	isDBAlreadyExisted := file != nil
+	file.Close()
+
 	// Pre-process before connecting to database
 	switch ct {
-	case CREATE_IF_NEEDED:
-		// NOT EXTRA ACTION
-	case CREATE_NEW_IF_NOT_EXISTS:
-		file, _ := os.OpenFile(dbPath, os.O_RDONLY, os.ModeDevice)
-		if file != nil {
-			return fmt.Errorf("can't create database (%s)\n\tError: It already exists", dbPath)
-		}
-	case CONNECT_IF_EXISTS:
-		file, _ := os.OpenFile(dbPath, os.O_RDONLY, os.ModeDevice)
-		if file == nil {
+	case settings.CREATE_IF_NEEDED:
+	case settings.CONNECT_IF_EXISTS:
+		if !isDBAlreadyExisted {
 			return fmt.Errorf("couldn't open database (%s), because it doesn't exist", dbPath)
 		}
-
-		file.Close()
-	case CREATE_ALWAYS:
+	case settings.CREATE_ALWAYS:
 		if CanDeleteDatabase {
-			os.Remove(dbPath)
+			err := os.Remove(dbPath)
+			if err != nil {
+				logger.WarningF("Couldn't delete database (%s) for recreation, because (%s)", db.dbPath, err)
+			} else {
+				isDBAlreadyExisted = false
+			}
 		}
 	}
 
@@ -85,7 +86,12 @@ func (db *DB) Connect(ct ConnectTypes) error {
 		}
 	}
 
-	logger.Debug("Applying migration changes")
+	if !isDBAlreadyExisted {
+		logger.Info("Preloading database tables with required records.")
+		for _, repo := range db.repositories {
+			repo.InitTable()
+		}
+	}
 
 	return nil
 }

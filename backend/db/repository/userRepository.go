@@ -8,6 +8,7 @@ import (
 	"st/backend/db"
 	"st/backend/db/entity"
 	"st/backend/logger"
+	"st/backend/settings"
 	"time"
 )
 
@@ -19,12 +20,12 @@ type UserRepository struct {
 var _ db.Repository = (*UserRepository)(nil)
 
 func (r *UserRepository) FindOneByLoginAndPassword(loginParam, passwd string) *entity.User {
-	template := fmt.Sprintf("SELECT id, login, dbPath FROM %s WHERE login = ? AND password = ?;", r.modelName)
+	template := fmt.Sprintf("SELECT id, login, name, db_path FROM %s WHERE login = ? AND password = ?;", r.modelName)
 	row := r.db.QueryRow(template, loginParam, passwd)
 
 	u := &entity.User{}
 
-	if err := row.Scan(&(u.Id), &(u.Login), &(u.DBPath)); err != nil {
+	if err := row.Scan(&(u.Id), &(u.Login), &(u.Name), &(u.DBPath)); err != nil {
 		logger.WarningF("Can't return with %s (%v)", r.modelName, err)
 
 		return nil
@@ -40,7 +41,7 @@ func (r *UserRepository) Save(user *entity.User) bool {
 	count := 0
 
 	if err := row.Scan(&count); err != nil || count > 0 {
-		logger.WarningF("Can't save, because it's already in table %s (%v)", r.modelName, err)
+		logger.WarningF("Can't save, because it's already in table %s, Error(%v)", r.modelName, err)
 
 		return false
 	}
@@ -55,12 +56,17 @@ func (r *UserRepository) Save(user *entity.User) bool {
 
 	logger.InfoF("Created a new database with name '%s'", user.DBPath)
 
-	mTemplate := fmt.Sprintf("INSERT INTO %s (login, password, dbPath) VALUES (?,?,?);", r.modelName)
+	mTemplate := fmt.Sprintf("INSERT INTO %s (login, password, name, db_path, created_at) VALUES (?,?,?,?,?);", r.modelName)
 
-	res, err := r.db.Exec(mTemplate, user.Login, user.Password, user.DBPath)
+	res, err := r.db.Exec(mTemplate, user.Login, user.Password, user.Name, user.DBPath, time.Now().Format(settings.Database.DateFormat))
+	if err != nil {
+		logger.ErrorF("Can't save to %s table, because: (%v)", r.modelName, err)
+
+		return false
+	}
+
 	inserted, _ := res.LastInsertId()
-
-	if err != nil || inserted == 0 {
+	if inserted == 0 {
 		logger.ErrorF("Can't save to %s table, because: (%v)", r.modelName, err)
 
 		return false
@@ -118,5 +124,7 @@ func (r *UserRepository) IsTableExist() bool {
 }
 
 func (r *UserRepository) Migrate() uint {
-	return migrate(r.db, r.modelName, entity.UserTableVersion, &entity.User{})
+	return migrate(r.db, r.modelName, &entity.User{})
 }
+
+func (r *UserRepository) InitTable() {}

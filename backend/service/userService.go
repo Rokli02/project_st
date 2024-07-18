@@ -26,8 +26,9 @@ func (s *UserService) Login(user *model.LoginUser) (string, error) {
 	return "", fmt.Errorf("unable to login")
 }
 
-func (s *UserService) SignUp(user *model.SignUpUser) {
+func (s *UserService) SignUp(user *model.SignUpUser) (string, error) {
 	// Check if login name is already taken
 
 	// Encrypt password
+	return "Succesful registration!", nil
 }

@@ -4,9 +4,9 @@ import "st/backend/db"
 
 type User struct {
 	Id        int64 `db_constraint:"PRIMARY KEY"`
-	Name      string
-	Login     string `db_constraint:"UNIQUE NOT NULL"`
-	Password  string `db_constraint:"NOT NULL"`
+	Name      *string
+	Login     string `db_constraint:"UNIQUE"`
+	Password  string
 	DBPath    string
 	CreatedAt string `db_constraint:"DEFAULT CURRENT_TIMESTAMP"`
 }
@@ -18,14 +18,14 @@ func (s *User) TableTemplate() (string, error) {
 }
 
 func (*User) Migrations() []db.Migration {
-	return userTableMigrations
+	return []db.Migration{
+		{
+			Version:  0,
+			Template: "",
+		},
+	}
 }
 
-var UserTableVersion uint = 0
-
-var userTableMigrations = []db.Migration{
-	{
-		Version:  1,
-		Template: "",
-	},
+func (*User) TableVersion() uint {
+	return 0
 }

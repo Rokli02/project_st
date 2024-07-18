@@ -9,9 +9,10 @@ import (
 	"st/backend/service"
 	"st/backend/settings"
 	"strings"
+	"time"
 )
 
-var baseDBRepositories []db.Repository = []db.Repository{repository.UserRepo, repository.MetadataRepo}
+var baseDBRepositories []db.Repository = []db.Repository{repository.User, repository.Metadata}
 var userDBRepositories []db.Repository = []db.Repository{}
 
 type Application struct {
@@ -19,7 +20,7 @@ type Application struct {
 
 	BaseDb    *db.DB
 	UserDB    *db.DB
-	Metadatas map[string]string
+	metadatas model.Metadata
 }
 
 func NewApplication() *Application {
@@ -29,18 +30,18 @@ func NewApplication() *Application {
 
 	return &Application{
 		BaseDb:    db.NewDB(settings.Database.BaseDatabaseName, baseDBRepositories),
-		Metadatas: make(map[string]string),
+		metadatas: make(model.Metadata),
 	}
 }
 
 func (a *Application) Startup(ctx context.Context) {
 	a.ctx = ctx
-	err := a.BaseDb.Connect(db.CREATE_ALWAYS)
+	err := a.BaseDb.Connect(settings.App.BaseDatabaseConnectType)
 	if err != nil {
 		logger.Error(err.Error())
 	}
 
-	// TODO: Get Metadatas From DB
+	a.metadatas = service.Metadata.LoadMetadatas()
 }
 
 func (a *Application) Shutdown(ctx context.Context) {
@@ -58,7 +59,7 @@ func (a *Application) Login(user *model.LoginUser) {
 		return
 	}
 
-	userDBPath, err := service.UserServ.Login(user)
+	userDBPath, err := service.User.Login(user)
 	if err != nil {
 		logger.WarningF("something happened during logging in, %s", err.Error())
 
@@ -74,4 +75,55 @@ func (a *Application) Logout() {
 	a.UserDB = nil
 
 	// TODO: Update Metadata keys
+}
+
+// TODO:
+func (a *Application) Signup(user *model.SignUpUser) {
+	message, err := service.User.SignUp(user)
+	if err != nil {
+		logger.WarningF("Couldn't sign up user, (%s)", err)
+	}
+
+	logger.Info(message)
+}
+
+func (a *Application) GetMetadata(key string) *model.MetadataValue {
+	metadata, has := a.metadatas[key]
+	if !has {
+		return nil
+	}
+
+	if metadata.ExpireAt.Before(time.Now()) {
+		// Remove MetadataValue
+		metadata.Value = nil
+		metadata.ExpireAt = nil
+
+		service.Metadata.UpdateMetadata(metadata.Id, model.UpdateMetadata{
+			Value:    metadata.Value,
+			ExpireAt: metadata.ExpireAt,
+		})
+
+		a.metadatas[key] = metadata
+	}
+
+	return &metadata
+}
+
+func (a *Application) SetMetadata(key string, value *model.UpdateMetadata) bool {
+	// newMetadata := model.MetadataValue{}
+
+	// HA már létezik az elem, akkor UPDATE
+	// HA még nem létezik, akkor CREATE
+	// metadata, has := a.metadatas[key]
+	// if has {
+	// 	newMetadata.Id = metadata.Id
+	// 	newMetadata.Value = metadata.Value
+	// 	newMetadata.Type = metadata.Type
+	// 	newMetadata.ExpireAt = metadata.ExpireAt
+	// 	// Set new values, to the old metadata
+	// 	return false
+	// }
+
+	return false
+	// Update
 }

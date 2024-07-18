@@ -6,9 +6,12 @@ import (
 	"st/backend/utils"
 )
 
-var UserServ *UserService = &UserService{}
+var User *UserService = &UserService{}
+var Metadata *MetadataService = &MetadataService{}
 
 func InitServices() {
-	UserServ.UserRepo = repository.UserRepo
-	UserServ.Encrypter = &utils.Encrypter{Secret: settings.Utils.Secret}
+	User.UserRepo = repository.User
+	User.Encrypter = &utils.Encrypter{Secret: settings.Utils.Secret}
+
+	Metadata.MetaRepo = repository.Metadata
 }

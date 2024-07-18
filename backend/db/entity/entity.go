@@ -33,7 +33,13 @@ func generateTableTemplate(param interface{}) (string, error) {
 		currentField := entityType.Field(i)
 		modelField := processField(&currentField)
 
-		sb.WriteString(fmt.Sprintf(" %s %s %s,\n", modelField.Name, modelField.Type, modelField.Constraints))
+		sb.WriteString("\t" + modelField.Name)
+		sb.WriteString(" " + modelField.Type)
+		if modelField.Constraints != "" {
+			sb.WriteString(" " + modelField.Constraints)
+
+		}
+		sb.WriteString(",\n")
 	}
 
 	cutDefinition, _ := strings.CutSuffix(sb.String(), ",\n")
@@ -47,16 +53,23 @@ func generateTableTemplate(param interface{}) (string, error) {
 func processField(param *reflect.StructField) db.ModelField {
 	modelField := db.ModelField{}
 
-	fieldType := param.Type.Name()
+	fieldType := param.Type.String()
+
+	if param.Type.Kind() == reflect.Ptr {
+		fieldType, _ = strings.CutPrefix(fieldType, "*")
+	} else {
+		modelField.Constraints = "NOT NULL"
+	}
+
 	if value, hasValue := typeMap[fieldType]; hasValue {
 		modelField.Type = value
 	} else {
-		logger.ErrorF("Can't convert type from GO to SQLITE Datatype: (%s)", value)
+		logger.ErrorF("Can't convert type from GO to SQLITE Datatype: (%s)", fieldType)
 		panic(-1)
 	}
 
 	if value, hasValue := param.Tag.Lookup(DB_CONSTRAINT_TAG); hasValue {
-		modelField.Constraints = value
+		modelField.Constraints = value + " " + modelField.Constraints
 	}
 
 	if value, hasValue := param.Tag.Lookup(DB_FIELDNAME_TAG); hasValue {

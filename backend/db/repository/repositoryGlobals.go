@@ -2,10 +2,10 @@ package repository
 
 import "st/backend/db/entity"
 
-var UserRepo *UserRepository = &UserRepository{}
-var MetadataRepo *MetadataRepository = &MetadataRepository{}
+var User *UserRepository = &UserRepository{}
+var Metadata *MetadataRepository = &MetadataRepository{}
 
 func InitRepositories() {
-	UserRepo.modelName = entity.NameOfModel(entity.User{})
-	MetadataRepo.modelName = entity.NameOfModel(entity.Metadata{})
+	User.modelName = entity.NameOfModel(entity.User{})
+	Metadata.modelName = entity.NameOfModel(entity.Metadata{})
 }

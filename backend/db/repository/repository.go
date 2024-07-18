@@ -61,19 +61,25 @@ func isTableExist(db *sql.DB, modelName string) bool {
 	return true
 }
 
-func migrate(db *sql.DB, modelName string, versionFrom uint, model db.Model) uint {
+func migrate(db *sql.DB, modelName string, model db.Model) uint {
 	sb := strings.Builder{}
 	migrations := model.Migrations()
 
+	if len(migrations) < 1 {
+		return 0
+	}
+
 	for _, mig := range migrations {
-		if mig.Version >= versionFrom {
+		if mig.Version > model.TableVersion() {
 			sb.WriteString(mig.Template + "\n")
 		}
 	}
 
-	res, err := db.Exec(sb.String())
+	tx, _ := db.Begin()
+	res, err := tx.Exec(sb.String())
 	if err != nil {
 		logger.ErrorF("Somer error occured during migrating table '%s' to a newer version (%v)", modelName, err)
+		tx.Rollback()
 
 		return 0
 	}
@@ -82,6 +88,8 @@ func migrate(db *sql.DB, modelName string, versionFrom uint, model db.Model) uin
 	if err != nil {
 		logger.WarningF("Error occured in '%s' migration", modelName)
 	}
+
+	tx.Commit()
 
 	return uint(affacted)
 }
