@@ -11,7 +11,7 @@ var Metadata *MetadataService = &MetadataService{}
 
 func InitServices() {
 	User.UserRepo = repository.User
-	User.Encrypter = &utils.Encrypter{Secret: settings.Utils.Secret}
+	User.Encrypter = utils.NewEncrypter(settings.Utils.Secret)
 
 	Metadata.MetaRepo = repository.Metadata
 }
