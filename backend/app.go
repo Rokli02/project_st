@@ -74,17 +74,18 @@ func (a *Application) Login(user *model.LoginUser) {
 func (a *Application) Logout() {
 	a.UserDB = nil
 
+	a.SetMetadata(settings.MetadataKeys.CurrentUserId, &model.UpdateMetadata{})
 	// TODO: Update Metadata keys
 }
 
 // TODO:
 func (a *Application) Signup(user *model.SignUpUser) {
-	message, err := service.User.SignUp(user)
+	err := service.User.SignUp(user)
 	if err != nil {
 		logger.WarningF("Couldn't sign up user, (%s)", err)
-	}
 
-	logger.Info(message)
+		return
+	}
 }
 
 func (a *Application) GetMetadata(key string) *model.MetadataValue {
@@ -112,6 +113,7 @@ func (a *Application) GetMetadata(key string) *model.MetadataValue {
 func (a *Application) SetMetadata(key string, value *model.UpdateMetadata) bool {
 	// newMetadata := model.MetadataValue{}
 
+	// HA 'value' == nil, akkor VALUE és EXPIRE_AT set to NULL
 	// HA már létezik az elem, akkor UPDATE
 	// HA még nem létezik, akkor CREATE
 	// metadata, has := a.metadatas[key]

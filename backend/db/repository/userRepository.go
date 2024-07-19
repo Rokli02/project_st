@@ -34,18 +34,22 @@ func (r *UserRepository) FindOneByLoginAndPassword(loginParam, passwd string) *e
 	return u
 }
 
-func (r *UserRepository) Save(user *entity.User) bool {
+func (r *UserRepository) IsExist(login string) bool {
 	qTemplate := fmt.Sprintf("SELECT count(*) FROM %s WHERE login = ?;", r.modelName)
 
-	row := r.db.QueryRow(qTemplate, user.Login)
+	row := r.db.QueryRow(qTemplate, login)
 	count := 0
 
-	if err := row.Scan(&count); err != nil || count > 0 {
-		logger.WarningF("Can't save, because it's already in table %s, Error(%v)", r.modelName, err)
+	if err := row.Scan(&count); err != nil || count == 0 {
+		logger.DebugF("User is already in table %s, Error(%v)", r.modelName, err)
 
 		return false
 	}
 
+	return true
+}
+
+func (r *UserRepository) Save(user *entity.User) bool {
 	// Generate a DB file path for user inside 'data/usr/'
 	user.DBPath = createUsrDBPath(user.Login)
 	if !isUsrDBPathAvailable(user.DBPath) {
