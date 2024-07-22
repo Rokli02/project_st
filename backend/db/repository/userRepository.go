@@ -41,10 +41,12 @@ func (r *UserRepository) IsExist(login string) bool {
 	count := 0
 
 	if err := row.Scan(&count); err != nil || count == 0 {
-		logger.DebugF("User is already in table %s, Error(%v)", r.modelName, err)
+		logger.WarningF("Some error occured in UserRepository.IsExist(%s) | (%s)", login, err)
 
 		return false
 	}
+
+	logger.DebugF("User is already in table %s", r.modelName)
 
 	return true
 }

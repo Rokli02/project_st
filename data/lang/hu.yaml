@@ -2,6 +2,8 @@ USER:
     NO_USER_GIVEN: "Nem adtál meg felhasználói fiókot!"
     INVALID_LOGIN_OR_PASSWORD: "Sikertelen bejelentkezés!\nRossz felhasználónevet és/vagy jelszót adtál meg."
     LOGIN_IS_ALREADY_IN_USE: "A felhasználónév már foglalt."
+    SIGN_UP_SUCCESFUL: "Sikeres regisztráció"
+    SIGN_UP_UNSUCCESFUL: "Sikertelen regisztráció"
     UNKNOWN_SIGN_UP_ERROR: "Sikertelen regisztráció valamilyen ismeretlen okból ㄟ( ▔, ▔ )ㄏ"
 COMMON:
     REQUIRED_PROP_MISSING: "Legalább egy kötelező mező nem lett megadva!"

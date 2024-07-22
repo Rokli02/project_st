@@ -12,7 +12,7 @@ import (
 var Text *Language = &Language{}
 
 func LoadLanguage(languageId string) {
-	logger.InfoF("Loading texts for the choosen language (%s)...", languageId)
+	logger.InfoF("Loading texts for the choosen language (%s) ...", languageId)
 
 	workingDirectory, _ := os.Getwd()
 	dbPath := path.Join(workingDirectory, "data", "lang", languageId+".yaml")

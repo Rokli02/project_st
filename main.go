@@ -4,6 +4,9 @@ import (
 	"context"
 	"embed"
 	"st/backend"
+	"st/backend/model"
+	"st/backend/utils"
+	myLogger "st/backend/utils/logger"
 
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
@@ -41,6 +44,7 @@ func _() {
 }
 
 func main() {
+	myLogger.Info("START")
 	app := backend.NewApplication()
 	app.Startup(context.Background())
 
@@ -54,6 +58,13 @@ func main() {
 	// }
 
 	// myLogger.Debug(repository.Metadata.FindAll())
+	myLogger.Error("___Választó vonal___")
+
+	myLogger.Debug("Sign up response:", app.Signup(&model.SignUpUser{Login: "brotha", Password: "123", Name: utils.ToRef("Vér Testvér")}))
+	myLogger.Debug("LanguageId Metadata:", app.GetMetadata("languageId"))
+	app.ReloadLanguageById("hu")
+	myLogger.Debug("LanguageId Metadata:", app.GetMetadata("languageId"))
+	myLogger.Debug("Sign up response:", app.Signup(&model.SignUpUser{Login: "brotha", Password: "123", Name: utils.ToRef("Vér Testvér")}))
 
 	defer app.BaseDb.Close()
 }

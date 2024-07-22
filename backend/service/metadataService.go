@@ -29,21 +29,64 @@ func (s *MetadataService) LoadMetadatas() model.Metadata {
 	return metadataMap
 }
 
-func (s *MetadataService) UpdateMetadata(id int64, value model.UpdateMetadata) bool {
-	// Get metadata from DB by id
+func (s *MetadataService) UpdateMetadata(id int64, updateMetadata *model.UpdateMetadata) *model.MetadataValue {
+	// Get metadata from DB by id, if doesn't exist return false
+	metadata := s.MetaRepo.FindById(id)
+	if metadata == nil {
+		return nil
+	}
 
-	// If doesn't exist return false
+	// Otherwise insert updateMetadata values into metadata, THEN update
+	metadata = updateMetadata.ToEntity(metadata)
 
-	// Otherwise insert into values THEN update
+	if s.MetaRepo.UpdateOne(id, metadata) {
+		metadataValue := &model.MetadataValue{
+			Id:        metadata.Id,
+			Value:     metadata.Value,
+			Type:      metadata.Type,
+			UpdatedAt: utils.ToTime(metadata.UpdatedAt),
+		}
 
-	// If Value or Type is 'nil', then don't change it
-	// If empty string (''), then set to 'nil'
-	// If any other value, then just simply set it
+		if metadata.ExpireAt != nil {
+			metadataValue.ExpireAt = utils.ToTime(*metadata.ExpireAt)
+		}
 
-	return true
-}
-
-func (s *MetadataService) CreateMetadata(key string, value model.MetadataValue) *model.MetadataValue {
+		return metadataValue
+	}
 
 	return nil
+}
+
+func (s *MetadataService) CreateMetadata(key string, metadata *model.MetadataValue) *model.MetadataValue {
+	if s.MetaRepo.IsExist(key) {
+		logger.WarningF("Metadata with such key (%s) is already in use", key)
+
+		return nil
+	}
+
+	id := s.MetaRepo.InsertOne(metadata.ToEntity(key))
+
+	if id < 1 {
+		return nil
+	}
+
+	metadataFromDB := s.MetaRepo.FindById(id)
+	if metadataFromDB == nil {
+		logger.Warning("Metadata wasn't inserted into database")
+
+		return nil
+	}
+
+	newMetadata := &model.MetadataValue{
+		Id:        metadataFromDB.Id,
+		Value:     metadataFromDB.Value,
+		Type:      metadataFromDB.Type,
+		UpdatedAt: utils.ToTime(metadataFromDB.UpdatedAt),
+	}
+
+	if metadataFromDB.ExpireAt != nil {
+		newMetadata.ExpireAt = utils.ToTime(*metadataFromDB.ExpireAt)
+	}
+
+	return newMetadata
 }

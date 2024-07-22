@@ -42,14 +42,8 @@ type UpdateMetadata struct {
 	ExpireAt *time.Time
 }
 
-func (m *UpdateMetadata) ToEntity(key string, metadata *entity.Metadata) *entity.Metadata {
-	metadata.ExpireAt = utils.ToRef(m.ExpireAt.Format(settings.Database.DateFormat))
-
-	if m.Type != nil {
-		metadata.Type = *m.Type
-	}
-
-	// If Value is an 'empty' string, we want to unset is
+func (m *UpdateMetadata) ToEntity(metadata *entity.Metadata) *entity.Metadata {
+	// If Value is an empty string (""), we want to unset it
 	// If it is nil we don't want to change it
 	// In any other case just change it
 	if m.Value != nil {
@@ -58,6 +52,16 @@ func (m *UpdateMetadata) ToEntity(key string, metadata *entity.Metadata) *entity
 		} else {
 			metadata.Value = m.Value
 		}
+	}
+
+	if m.Type != nil {
+		metadata.Type = *m.Type
+	}
+
+	if m.ExpireAt == nil {
+		metadata.ExpireAt = nil
+	} else {
+		metadata.ExpireAt = utils.ToRef(m.ExpireAt.Format(settings.Database.DateFormat))
 	}
 
 	return metadata

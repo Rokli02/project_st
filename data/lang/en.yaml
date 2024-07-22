@@ -1,0 +1,7 @@
+USER:
+    SIGN_UP_SUCCESFUL: "Registration is succesfully"
+    SIGN_UP_UNSUCCESFUL: "Can't sign up user"
+    UNKNOWN_SIGN_UP_ERROR: "Sikertelen regisztráció valamilyen ismeretlen okból ㄟ( ▔, ▔ )ㄏ"
+COMMON:
+    UNKNOWN_ERROR: "Unknown error occured, try again a bit later!"
+UNKNOWN: "(ಠ_ಠ) Text is not recorded, yet [%s] (ಠ_ಠ)"

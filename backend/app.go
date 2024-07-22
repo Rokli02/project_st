@@ -86,7 +86,6 @@ func (a *Application) Logout() {
 	a.SetMetadata(settings.MetadataKeys.CurrentUserId, &model.UpdateMetadata{})
 }
 
-// TODO:
 func (a *Application) Signup(user *model.SignUpUser) signupResponse {
 	err := service.User.SignUp(user)
 	if err != nil {
@@ -97,11 +96,13 @@ func (a *Application) Signup(user *model.SignUpUser) signupResponse {
 				Code:    400,
 				Message: err.Error(),
 			},
-			Response: "",
+			Response: lang.Text.User.Get("SIGN_UP_UNSUCCESFUL"),
 		}
 	}
 
-	return signupResponse{}
+	return signupResponse{
+		Response: lang.Text.User.Get("SIGN_UP_SUCCESFUL"),
+	}
 }
 
 func (a *Application) GetMetadata(key string) *model.MetadataValue {
@@ -110,12 +111,12 @@ func (a *Application) GetMetadata(key string) *model.MetadataValue {
 		return nil
 	}
 
-	if metadata.ExpireAt.Before(time.Now()) {
+	if metadata.ExpireAt != nil && metadata.ExpireAt.Before(time.Now()) {
 		// Remove MetadataValue
 		metadata.Value = nil
 		metadata.ExpireAt = nil
 
-		service.Metadata.UpdateMetadata(metadata.Id, model.UpdateMetadata{
+		service.Metadata.UpdateMetadata(metadata.Id, &model.UpdateMetadata{
 			Value:    metadata.Value,
 			ExpireAt: metadata.ExpireAt,
 		})
@@ -126,24 +127,55 @@ func (a *Application) GetMetadata(key string) *model.MetadataValue {
 	return &metadata
 }
 
-func (a *Application) SetMetadata(key string, value *model.UpdateMetadata) bool {
+func (a *Application) SetMetadata(key string, updateMetadata *model.UpdateMetadata) bool {
 	// newMetadata := model.MetadataValue{}
+	value, has := a.metadatas[key]
+	if !has {
+		// HA még nem létezik, akkor CREATE
+		createMetadata := &model.MetadataValue{
+			Value:    updateMetadata.Value,
+			ExpireAt: updateMetadata.ExpireAt,
+		}
 
-	// HA 'value' == nil, akkor VALUE és EXPIRE_AT set to NULL
+		if updateMetadata.Type == nil {
+			createMetadata.Type = ""
+		} else {
+			createMetadata.Type = *updateMetadata.Type
+		}
+
+		result := service.Metadata.CreateMetadata(key, createMetadata)
+		if result == nil {
+			return false
+		}
+
+		a.metadatas[key] = *result
+
+		return true
+	}
+
 	// HA már létezik az elem, akkor UPDATE
-	// HA még nem létezik, akkor CREATE
-	// metadata, has := a.metadatas[key]
-	// if has {
-	// 	newMetadata.Id = metadata.Id
-	// 	newMetadata.Value = metadata.Value
-	// 	newMetadata.Type = metadata.Type
-	// 	newMetadata.ExpireAt = metadata.ExpireAt
-	// 	// Set new values, to the old metadata
-	// 	return false
-	// }
+	result := service.Metadata.UpdateMetadata(value.Id, updateMetadata)
+	if result == nil {
+		return false
+	}
 
-	return false
-	// Update
+	a.metadatas[key] = *result
+
+	return true
+}
+
+func (a *Application) ReloadLanguage() {
+	if languageId, has := a.metadatas[settings.MetadataKeys.LanguageId]; has && languageId.Value != nil {
+		lang.LoadLanguage(*languageId.Value)
+	}
+}
+
+func (a *Application) ReloadLanguageById(languageId string) {
+	if a.SetMetadata(settings.MetadataKeys.LanguageId, &model.UpdateMetadata{Value: &languageId}) {
+		if languageId, has := a.metadatas[settings.MetadataKeys.LanguageId]; has && languageId.Value != nil {
+			lang.LoadLanguage(*languageId.Value)
+		}
+	}
 }
 
 //

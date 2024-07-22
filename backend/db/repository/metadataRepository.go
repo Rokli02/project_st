@@ -66,6 +66,51 @@ func (r *MetadataRepository) FindAll() []entity.Metadata {
 	return metadatas
 }
 
+func (r *MetadataRepository) IsExist(key string) bool {
+	qTemplate := fmt.Sprintf("SELECT count(*) FROM %s WHERE key = ?;", r.modelName)
+
+	row := r.db.QueryRow(qTemplate, key)
+	count := 0
+
+	if err := row.Scan(&count); err != nil || count == 0 {
+		logger.DebugF("Metadata is already in table %s, Error(%v)", r.modelName, err)
+
+		return false
+	}
+
+	return true
+}
+
+func (r *MetadataRepository) InsertOne(metadata *entity.Metadata) (id int64) {
+	stmt, _ := r.db.Prepare(fmt.Sprintf("INSERT INTO %s (key, value, type, updated_at, expire_at) VALUES (?,?,?,?,?);", r.modelName))
+	defer stmt.Close()
+
+	var updatedAt string = time.Now().Format(settings.Database.DateFormat)
+
+	var mutationArgs []any = []any{
+		metadata.Key,      // Key
+		metadata.Value,    // Value
+		"app",             // Type
+		updatedAt,         // UpdatedAt
+		metadata.ExpireAt, // ExpireAt
+	}
+
+	if metadata.Type != "" {
+		mutationArgs[2] = metadata.Type
+	}
+
+	res, err := stmt.Exec(mutationArgs...)
+	if err != nil {
+		logger.Warning("Some error occured during inserting metadata to db:", err)
+
+		return
+	}
+
+	id, _ = res.LastInsertId()
+
+	return
+}
+
 func (r *MetadataRepository) InsertMultiple(metadatas []entity.Metadata) (inserted int) {
 	stmt, _ := r.db.Prepare(fmt.Sprintf("INSERT INTO %s (key, value, type, updated_at, expire_at) VALUES (?,?,?,?,?);", r.modelName))
 	defer stmt.Close()
@@ -99,9 +144,9 @@ func (r *MetadataRepository) InsertMultiple(metadatas []entity.Metadata) (insert
 	return
 }
 
-func (r *MetadataRepository) UpdateOne(id int64, metadata entity.Metadata) bool {
+func (r *MetadataRepository) UpdateOne(id int64, metadata *entity.Metadata) bool {
 	var updatedAt string = time.Now().Format(settings.Database.DateFormat)
-	template := fmt.Sprintf("UPDATE %s SET value = ?, type = ?, updated_at = %s, expire_at = ? WHERE id = ?;", r.modelName, updatedAt)
+	template := fmt.Sprintf("UPDATE %s SET value = ?, type = ?, updated_at = '%s', expire_at = ? WHERE id = ?;", r.modelName, updatedAt)
 
 	var mutationArgs []any = []any{
 		metadata.Value,    // Value
@@ -115,6 +160,9 @@ func (r *MetadataRepository) UpdateOne(id int64, metadata entity.Metadata) bool 
 	}
 
 	res, err := r.db.Exec(template, mutationArgs...)
+	if err != nil {
+		logger.ErrorF("Some error occured during updating a metadata (%s)", err)
+	}
 	affected, _ := res.RowsAffected()
 
 	if err != nil || affected == 0 {
