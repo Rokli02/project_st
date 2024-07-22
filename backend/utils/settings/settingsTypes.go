@@ -28,5 +28,6 @@ type UtilsSettings struct {
 
 type MetadataKeysConfig struct {
 	CurrentUserId    string
+	LanguageId       string
 	UserTableVersion string
 }

@@ -2,8 +2,8 @@ package model
 
 import (
 	"st/backend/db/entity"
-	"st/backend/settings"
 	"st/backend/utils"
+	"st/backend/utils/settings"
 	"time"
 )
 

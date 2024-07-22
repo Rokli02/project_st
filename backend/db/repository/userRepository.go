@@ -7,8 +7,8 @@ import (
 	"path"
 	"st/backend/db"
 	"st/backend/db/entity"
-	"st/backend/logger"
-	"st/backend/settings"
+	"st/backend/utils/logger"
+	"st/backend/utils/settings"
 	"time"
 )
 

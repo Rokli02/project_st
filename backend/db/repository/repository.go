@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"st/backend/db"
-	"st/backend/logger"
+	"st/backend/utils/logger"
 	"strings"
 )
 

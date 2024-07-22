@@ -4,10 +4,11 @@ import (
 	"context"
 	"st/backend/db"
 	"st/backend/db/repository"
-	"st/backend/logger"
 	"st/backend/model"
 	"st/backend/service"
-	"st/backend/settings"
+	"st/backend/utils/lang"
+	"st/backend/utils/logger"
+	"st/backend/utils/settings"
 	"strings"
 	"time"
 )
@@ -42,6 +43,14 @@ func (a *Application) Startup(ctx context.Context) {
 	}
 
 	a.metadatas = service.Metadata.LoadMetadatas()
+
+	if languageId, has := a.metadatas[settings.MetadataKeys.LanguageId]; !has || languageId.Value == nil {
+		logger.ErrorF("Language Id is not loaded into the application!")
+
+		panic(-1)
+	} else {
+		lang.LoadLanguage(*languageId.Value)
+	}
 }
 
 func (a *Application) Shutdown(ctx context.Context) {
@@ -75,17 +84,24 @@ func (a *Application) Logout() {
 	a.UserDB = nil
 
 	a.SetMetadata(settings.MetadataKeys.CurrentUserId, &model.UpdateMetadata{})
-	// TODO: Update Metadata keys
 }
 
 // TODO:
-func (a *Application) Signup(user *model.SignUpUser) {
+func (a *Application) Signup(user *model.SignUpUser) signupResponse {
 	err := service.User.SignUp(user)
 	if err != nil {
-		logger.WarningF("Couldn't sign up user, (%s)", err)
+		logger.WarningF("Can't sign up user, (%s)", err)
 
-		return
+		return signupResponse{
+			Error: &model.ResponseError{
+				Code:    400,
+				Message: err.Error(),
+			},
+			Response: "",
+		}
 	}
+
+	return signupResponse{}
 }
 
 func (a *Application) GetMetadata(key string) *model.MetadataValue {
@@ -129,3 +145,9 @@ func (a *Application) SetMetadata(key string, value *model.UpdateMetadata) bool 
 	return false
 	// Update
 }
+
+//
+//	Types used locally
+//
+
+type signupResponse model.StandardResponse[string]

@@ -2,8 +2,8 @@ package service
 
 import (
 	"st/backend/db/repository"
-	"st/backend/settings"
 	"st/backend/utils"
+	"st/backend/utils/settings"
 )
 
 var User *UserService = &UserService{}

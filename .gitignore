@@ -7,3 +7,4 @@ data/usr/*
 !frontend/dist/.gitkeep
 !data/usr
 !data/usr/.gitkeep
+!data/lang

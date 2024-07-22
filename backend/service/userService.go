@@ -3,9 +3,10 @@ package service
 import (
 	"fmt"
 	"st/backend/db/repository"
-	"st/backend/logger"
 	"st/backend/model"
 	"st/backend/utils"
+	"st/backend/utils/lang"
+	"st/backend/utils/logger"
 )
 
 type UserService struct {
@@ -17,7 +18,7 @@ var _ Service = (*UserService)(nil)
 
 func (s *UserService) Login(user *model.LoginUser) (string, error) {
 	if user == nil {
-		return "", fmt.Errorf("no user is given")
+		return "", fmt.Errorf(lang.Text.User.Get("NO_USER_GIVEN"))
 	}
 
 	// Encrypt password
@@ -27,7 +28,7 @@ func (s *UserService) Login(user *model.LoginUser) (string, error) {
 	userFromDB := s.UserRepo.FindOneByLoginAndPassword(user.Login, user.Password)
 	// If unsuccesful return with an error
 	if userFromDB == nil {
-		return "", fmt.Errorf("can't log in, login name or password is incorrect")
+		return "", fmt.Errorf(lang.Text.User.Get("INVALID_LOGIN_OR_PASSWORD"))
 	}
 
 	logger.InfoF("User '%s' is logged in", userFromDB.Login)
@@ -38,17 +39,17 @@ func (s *UserService) Login(user *model.LoginUser) (string, error) {
 
 func (s *UserService) SignUp(user *model.SignUpUser) error {
 	if user == nil {
-		return fmt.Errorf("no user is given")
+		return fmt.Errorf(lang.Text.User.Get("NO_USER_GIVEN"))
 	}
 
 	if user.Login == "" || user.Password == "" {
-		return fmt.Errorf("at least one required property is missing from user")
+		return fmt.Errorf(lang.Text.Common.Get("REQUIRED_PROP_MISSING"))
 	}
 
 	// Check if login name is already taken
 	isExist := s.UserRepo.IsExist(user.Login)
 	if isExist {
-		return fmt.Errorf("login name is already in use, try a different one")
+		return fmt.Errorf(lang.Text.User.Get("LOGIN_IS_ALREADY_IN_USE"))
 	}
 
 	// Encrypt password
@@ -61,7 +62,7 @@ func (s *UserService) SignUp(user *model.SignUpUser) error {
 
 	result := s.UserRepo.Save(user.ToEntity())
 	if !result {
-		return fmt.Errorf("can sign up for some reason ㄟ( ▔, ▔ )ㄏ")
+		return fmt.Errorf(lang.Text.User.Get("UNKNOWN_SIGN_UP_ERROR")) // USER[UNKNOWN_SIGN_UP_ERROR]
 	}
 
 	return nil

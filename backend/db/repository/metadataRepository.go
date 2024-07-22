@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"st/backend/db"
 	"st/backend/db/entity"
-	"st/backend/logger"
-	"st/backend/settings"
 	"st/backend/utils"
+	"st/backend/utils/logger"
+	"st/backend/utils/settings"
 	"strings"
 	"time"
 )
@@ -211,7 +211,6 @@ func (r *MetadataRepository) Migrate() uint {
 
 func (r *MetadataRepository) InitTable() {
 	userTableVersion := fmt.Sprintf("%d", (&entity.User{}).TableVersion())
-	expireAfter20Secs := time.Now().Add(time.Second * 20).Format(settings.Database.DateFormat)
 
 	var initMetadatas []entity.Metadata = []entity.Metadata{
 		{
@@ -219,10 +218,11 @@ func (r *MetadataRepository) InitTable() {
 			Value: &userTableVersion,
 		},
 		{
-			Key:      "random",
-			Value:    utils.ToRef("Ertelmetlen"),
-			ExpireAt: &expireAfter20Secs,
-			Type:     "szav",
+			Key: settings.MetadataKeys.CurrentUserId,
+		},
+		{
+			Key:   settings.MetadataKeys.LanguageId,
+			Value: &settings.LanguageIds[0],
 		},
 	}
 

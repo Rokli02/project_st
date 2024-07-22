@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"st/backend/logger"
-	"st/backend/settings"
+	"st/backend/utils/logger"
+	"st/backend/utils/settings"
 
 	_ "modernc.org/sqlite"
 )

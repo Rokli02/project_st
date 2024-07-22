@@ -4,6 +4,7 @@ var App AppSettings = AppSettings{}
 var Database DatabaseSettings = DatabaseSettings{}
 var Utils UtilsSettings = UtilsSettings{}
 var MetadataKeys MetadataKeysConfig = MetadataKeysConfig{}
+var LanguageIds []string = []string{"hu", "en"}
 
 func InitSettings() {
 	App.Version = "0.0.1"
@@ -15,5 +16,6 @@ func InitSettings() {
 	Utils.Secret = "ooo"
 
 	MetadataKeys.CurrentUserId = "currentUserId"
+	MetadataKeys.LanguageId = "languageId"
 	MetadataKeys.UserTableVersion = "userTableVersion"
 }

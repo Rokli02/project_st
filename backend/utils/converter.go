@@ -2,8 +2,8 @@ package utils
 
 import (
 	"regexp"
-	"st/backend/logger"
-	"st/backend/settings"
+	"st/backend/utils/logger"
+	"st/backend/utils/settings"
 	"strconv"
 	"strings"
 	"time"

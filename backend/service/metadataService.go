@@ -2,9 +2,9 @@ package service
 
 import (
 	"st/backend/db/repository"
-	"st/backend/logger"
 	"st/backend/model"
 	"st/backend/utils"
+	"st/backend/utils/logger"
 )
 
 type MetadataService struct {
@@ -32,9 +32,13 @@ func (s *MetadataService) LoadMetadatas() model.Metadata {
 func (s *MetadataService) UpdateMetadata(id int64, value model.UpdateMetadata) bool {
 	// Get metadata from DB by id
 
-	// If doesn't exist insert it
+	// If doesn't exist return false
 
 	// Otherwise insert into values THEN update
+
+	// If Value or Type is 'nil', then don't change it
+	// If empty string (''), then set to 'nil'
+	// If any other value, then just simply set it
 
 	return true
 }
