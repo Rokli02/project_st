@@ -2,15 +2,16 @@ package backend
 
 import (
 	"context"
+	"fmt"
 	"st/backend/db"
 	"st/backend/db/repository"
 	"st/backend/model"
 	"st/backend/service"
+	"st/backend/utils"
 	"st/backend/utils/lang"
 	"st/backend/utils/logger"
 	"st/backend/utils/settings"
 	"strings"
-	"time"
 )
 
 var baseDBRepositories []db.Repository = []db.Repository{repository.User, repository.Metadata}
@@ -36,12 +37,14 @@ func NewApplication() *Application {
 }
 
 func (a *Application) Startup(ctx context.Context) {
+	// Connect to base database
 	a.ctx = ctx
 	err := a.BaseDb.Connect(settings.App.BaseDatabaseConnectType)
 	if err != nil {
 		logger.Error(err.Error())
 	}
 
+	// Load metadatas and texts
 	a.metadatas = service.Metadata.LoadMetadatas()
 
 	if languageId, has := a.metadatas[settings.MetadataKeys.LanguageId]; !has || languageId.Value == nil {
@@ -50,6 +53,11 @@ func (a *Application) Startup(ctx context.Context) {
 		panic(-1)
 	} else {
 		lang.LoadLanguage(*languageId.Value)
+	}
+
+	// Check if there is an user that stayed logged in AND connects to its DB
+	if a.HasLoggedInUser(nil) {
+		a.connectUserDB()
 	}
 }
 
@@ -63,35 +71,44 @@ func (a *Application) Shutdown(ctx context.Context) {
 }
 
 // Nem tudom mik legyenek a paraméterek
-func (a *Application) Login(user *model.LoginUser) {
-	if user == nil || strings.TrimSpace(user.Login) == "" || strings.TrimSpace(user.Password) == "" {
-		return
+func (a *Application) Login(loginUser *model.LoginUser) bool {
+	if loginUser == nil || strings.TrimSpace(loginUser.Login) == "" || strings.TrimSpace(loginUser.Password) == "" {
+		return false
 	}
 
-	userDBPath, err := service.User.Login(user)
-	if err != nil {
-		logger.WarningF("something happened during logging in, %s", err.Error())
+	user, err := service.User.Login(loginUser)
+	if err != nil || user == nil {
+		logger.WarningF("something happened during logging in, %s", err)
 
-		return
+		return false
 	}
 
-	// TODO: Update Metadata keys
+	// Update currentUser in Metadata
+	a.SetMetadata(settings.MetadataKeys.CurrentUserId, &model.UpdateMetadata{Value: utils.ToRef(fmt.Sprintf("%d", user.Id))})
 
-	a.UserDB = db.NewDB(userDBPath, userDBRepositories)
+	if a.HasLoggedInUser(user) {
+		return a.connectUserDB()
+	}
+
+	return false
 }
 
 func (a *Application) Logout() {
+	if a.UserDB != nil {
+		a.UserDB.Close()
+	}
+
 	a.UserDB = nil
 
-	a.SetMetadata(settings.MetadataKeys.CurrentUserId, &model.UpdateMetadata{})
+	a.SetMetadata(settings.MetadataKeys.CurrentUserId, &model.UpdateMetadata{Value: utils.ToRef("")})
 }
 
-func (a *Application) Signup(user *model.SignUpUser) signupResponse {
+func (a *Application) Signup(user *model.SignUpUser) model.StandardResponse {
 	err := service.User.SignUp(user)
 	if err != nil {
 		logger.WarningF("Can't sign up user, (%s)", err)
 
-		return signupResponse{
+		return model.StandardResponse{
 			Error: &model.ResponseError{
 				Code:    400,
 				Message: err.Error(),
@@ -100,7 +117,7 @@ func (a *Application) Signup(user *model.SignUpUser) signupResponse {
 		}
 	}
 
-	return signupResponse{
+	return model.StandardResponse{
 		Response: lang.Text.User.Get("SIGN_UP_SUCCESFUL"),
 	}
 }
@@ -111,7 +128,7 @@ func (a *Application) GetMetadata(key string) *model.MetadataValue {
 		return nil
 	}
 
-	if metadata.ExpireAt != nil && metadata.ExpireAt.Before(time.Now()) {
+	if utils.IsDateExpired(metadata.ExpireAt) {
 		// Remove MetadataValue
 		metadata.Value = nil
 		metadata.ExpireAt = nil
@@ -178,8 +195,46 @@ func (a *Application) ReloadLanguageById(languageId string) {
 	}
 }
 
-//
-//	Types used locally
-//
+func (a *Application) HasLoggedInUser(user *model.User) bool {
+	if a.UserDB != nil {
+		return true
+	}
 
-type signupResponse model.StandardResponse[string]
+	var currentUser *model.User = user
+
+	if currentUser == nil {
+		// Check if there is an user that stayed logged in
+		currentUserMetadata := a.GetMetadata(settings.MetadataKeys.CurrentUserId)
+		if currentUserMetadata == nil || currentUserMetadata.Value == nil {
+			return false
+		}
+
+		// Parsing to an unsigned integer is totally fine, because ID must be bigger than 0 AND ParseInt would call this too
+		var currentUserId int64
+		if read, err := fmt.Sscan(*currentUserMetadata.Value, &currentUserId); read != 1 || err != nil {
+			logger.WarningF("Error occured during parsing current user id (%s)", err)
+
+			return false
+		}
+
+		currentUser = service.User.FindById(currentUserId)
+		if currentUser == nil {
+			return false
+		}
+	}
+
+	// If a user is found, then connect to DB
+	a.UserDB = db.NewDB(*currentUser.DBPath, userDBRepositories)
+
+	return true
+}
+
+func (a *Application) connectUserDB() bool {
+	if err := a.UserDB.Connect(settings.CREATE_ALWAYS); err != nil {
+		logger.ErrorF("Couldn't open user's database (%s). Raised error: %s", a.UserDB.DBPath, err)
+
+		return false
+	}
+
+	return true
+}

@@ -19,6 +19,21 @@ type UserRepository struct {
 
 var _ db.Repository = (*UserRepository)(nil)
 
+func (r *UserRepository) FindById(id int64) *entity.User {
+	template := fmt.Sprintf("SELECT id, login, name, db_path FROM %s WHERE id = ? LIMIT 1", r.modelName)
+	row := r.db.QueryRow(template, id)
+
+	u := &entity.User{}
+
+	if err := row.Scan(&(u.Id), &(u.Login), &(u.Name), &(u.DBPath)); err != nil {
+		logger.WarningF("Couldn't find user with id %d (%s)", id, err)
+
+		return nil
+	}
+
+	return u
+}
+
 func (r *UserRepository) FindOneByLoginAndPassword(loginParam, passwd string) *entity.User {
 	template := fmt.Sprintf("SELECT id, login, name, db_path FROM %s WHERE login = ? AND password = ?;", r.modelName)
 	row := r.db.QueryRow(template, loginParam, passwd)

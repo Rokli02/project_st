@@ -53,13 +53,13 @@ func Warning(a ...any) {
 }
 
 func ErrorF(format string, a ...any) {
-	fmt.Printf("\x1B[38;2;171;15;18m[ERR]\t%s    ", time.Now().Format(dateFormat))
+	fmt.Printf("\x1B[38;2;171;15;18m[ERR]\t\t%s    ", time.Now().Format(dateFormat))
 	fmt.Printf(format, a...)
 	fmt.Printf("\x1B[0m\n")
 }
 
 func Error(a ...any) {
-	fmt.Printf("\x1B[38;2;171;15;18m[ERR]\t%s    ", time.Now().Format(dateFormat))
+	fmt.Printf("\x1B[38;2;171;15;18m[ERR]\t\t%s    ", time.Now().Format(dateFormat))
 	fmt.Println(a...)
 	fmt.Printf("\x1B[0m")
 }

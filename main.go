@@ -17,7 +17,7 @@ import (
 //go:embed all:frontend/dist
 var assets embed.FS
 
-func _() {
+func main() {
 	// Create an instance of the app structure
 	app := backend.NewApplication()
 
@@ -33,8 +33,16 @@ func _() {
 		Windows: &windows.Options{
 			DisablePinchZoom: true,
 		},
+
 		Bind: []interface{}{
 			app,
+			&model.User{},
+			&model.LoginUser{},
+			&model.SignUpUser{},
+			&model.StandardResponse{},
+			&model.ResponseError{},
+			&model.MetadataValue{},
+			&model.UpdateMetadata{},
 		},
 	})
 
@@ -43,7 +51,7 @@ func _() {
 	}
 }
 
-func main() {
+func _() {
 	myLogger.Info("START")
 	app := backend.NewApplication()
 	app.Startup(context.Background())

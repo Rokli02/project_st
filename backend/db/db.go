@@ -15,13 +15,13 @@ const CanDeleteDatabase = true
 
 type DB struct {
 	Conn         *sql.DB
-	dbPath       string
+	DBPath       string
 	repositories []Repository
 }
 
 func NewDB(path string, models []Repository) *DB {
 	db := &DB{
-		dbPath:       path,
+		DBPath:       path,
 		repositories: make([]Repository, 0),
 	}
 
@@ -33,10 +33,10 @@ func NewDB(path string, models []Repository) *DB {
 }
 
 func (db *DB) Connect(ct settings.ConnectTypes) error {
-	logger.InfoF("Connecting to database (%s)...", db.dbPath)
+	logger.InfoF("Connecting to database (%s)...", db.DBPath)
 
 	workingDirectory, _ := os.Getwd()
-	dbPath := path.Join(workingDirectory, "data", db.dbPath)
+	dbPath := path.Join(workingDirectory, "data", db.DBPath)
 
 	logger.Debug("Database path:", dbPath)
 
@@ -55,7 +55,7 @@ func (db *DB) Connect(ct settings.ConnectTypes) error {
 		if CanDeleteDatabase {
 			err := os.Remove(dbPath)
 			if err != nil {
-				logger.WarningF("Couldn't delete database (%s) for recreation, because (%s)", db.dbPath, err)
+				logger.WarningF("Couldn't delete database (%s) for recreation, because (%s)", db.DBPath, err)
 			} else {
 				isDBAlreadyExisted = false
 			}
@@ -97,10 +97,10 @@ func (db *DB) Connect(ct settings.ConnectTypes) error {
 }
 
 func (db *DB) Close() {
-	logger.InfoF("Closing Database (%s)...", db.dbPath)
+	logger.InfoF("Closing Database (%s)...", db.DBPath)
 
 	if db.Conn == nil {
-		logger.WarningF("There is no connection to database (%s), the ref is 'nil'", db.dbPath)
+		logger.WarningF("There is no connection to database (%s), the ref is 'nil'", db.DBPath)
 		return
 	}
 

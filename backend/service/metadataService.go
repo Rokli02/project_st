@@ -3,7 +3,6 @@ package service
 import (
 	"st/backend/db/repository"
 	"st/backend/model"
-	"st/backend/utils"
 	"st/backend/utils/logger"
 )
 
@@ -20,7 +19,7 @@ func (s *MetadataService) LoadMetadatas() model.Metadata {
 			Id:        metadata.Id,
 			Value:     metadata.Value,
 			Type:      metadata.Type,
-			UpdatedAt: utils.ToTime(metadata.UpdatedAt),
+			UpdatedAt: metadata.UpdatedAt,
 		}
 	}
 
@@ -44,11 +43,8 @@ func (s *MetadataService) UpdateMetadata(id int64, updateMetadata *model.UpdateM
 			Id:        metadata.Id,
 			Value:     metadata.Value,
 			Type:      metadata.Type,
-			UpdatedAt: utils.ToTime(metadata.UpdatedAt),
-		}
-
-		if metadata.ExpireAt != nil {
-			metadataValue.ExpireAt = utils.ToTime(*metadata.ExpireAt)
+			UpdatedAt: metadata.UpdatedAt,
+			ExpireAt:  metadata.ExpireAt,
 		}
 
 		return metadataValue
@@ -81,11 +77,8 @@ func (s *MetadataService) CreateMetadata(key string, metadata *model.MetadataVal
 		Id:        metadataFromDB.Id,
 		Value:     metadataFromDB.Value,
 		Type:      metadataFromDB.Type,
-		UpdatedAt: utils.ToTime(metadataFromDB.UpdatedAt),
-	}
-
-	if metadataFromDB.ExpireAt != nil {
-		newMetadata.ExpireAt = utils.ToTime(*metadataFromDB.ExpireAt)
+		UpdatedAt: metadataFromDB.UpdatedAt,
+		ExpireAt:  metadataFromDB.ExpireAt,
 	}
 
 	return newMetadata

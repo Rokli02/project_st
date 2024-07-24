@@ -31,7 +31,7 @@ func (r *MetadataRepository) FindById(id int64) *entity.Metadata {
 		return nil
 	}
 
-	if isDateExpired(metadata.ExpireAt) {
+	if utils.IsDateExpired(metadata.ExpireAt) {
 		r.DeleteOne(id)
 
 		metadata.Value = nil
@@ -51,7 +51,7 @@ func (r *MetadataRepository) FindAll() []entity.Metadata {
 
 		rows.Scan(&(metadata.Id), &(metadata.Key), &(metadata.Value), &(metadata.Type), &(metadata.UpdatedAt), &(metadata.ExpireAt))
 
-		if isDateExpired(metadata.ExpireAt) {
+		if utils.IsDateExpired(metadata.ExpireAt) {
 			metadatasToRemove = append(metadatasToRemove, metadata.Id)
 
 			metadata.Value = nil
@@ -223,10 +223,6 @@ func (r *MetadataRepository) DeleteMultiple(ids []int64) (deleted int) {
 	}
 
 	return int(affected)
-}
-
-func isDateExpired(expireDate *string) bool {
-	return expireDate != nil && *expireDate != "" && utils.ToTime(*expireDate).Before(time.Now())
 }
 
 //

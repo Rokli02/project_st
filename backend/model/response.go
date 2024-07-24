@@ -1,11 +1,11 @@
 package model
 
 type ResponseError struct {
-	Code    int
-	Message string
+	Code    int    `json:"code"`
+	Message string `json:"message"`
 }
 
-type StandardResponse[T any] struct {
-	Error    *ResponseError
-	Response T
+type StandardResponse struct {
+	Error    *ResponseError `json:"error"`
+	Response any            `json:"response"`
 }

@@ -16,9 +16,18 @@ type UserService struct {
 
 var _ Service = (*UserService)(nil)
 
-func (s *UserService) Login(user *model.LoginUser) (string, error) {
+func (s *UserService) FindById(id int64) *model.User {
+	entity := s.UserRepo.FindById(id)
+	if entity == nil {
+		return nil
+	}
+
+	return model.UserEntityToUser(entity)
+}
+
+func (s *UserService) Login(user *model.LoginUser) (*model.User, error) {
 	if user == nil {
-		return "", fmt.Errorf(lang.Text.User.Get("NO_USER_GIVEN"))
+		return nil, fmt.Errorf(lang.Text.User.Get("NO_USER_GIVEN"))
 	}
 
 	// Encrypt password
@@ -28,13 +37,13 @@ func (s *UserService) Login(user *model.LoginUser) (string, error) {
 	userFromDB := s.UserRepo.FindOneByLoginAndPassword(user.Login, user.Password)
 	// If unsuccesful return with an error
 	if userFromDB == nil {
-		return "", fmt.Errorf(lang.Text.User.Get("INVALID_LOGIN_OR_PASSWORD"))
+		return nil, fmt.Errorf(lang.Text.User.Get("INVALID_LOGIN_OR_PASSWORD"))
 	}
 
 	logger.InfoF("User '%s' is logged in", userFromDB.Login)
 
 	// Else return with the userDbPath
-	return userFromDB.DBPath, nil
+	return model.UserEntityToUser(userFromDB), nil
 }
 
 func (s *UserService) SignUp(user *model.SignUpUser) error {
