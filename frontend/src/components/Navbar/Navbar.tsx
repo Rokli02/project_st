@@ -11,20 +11,20 @@ const Navbar: FC = () => {
     <div id={styles['navbar']}>
       <div className={`${styles['nav-items']} horizontal-scrollbar`}>
         <div className={styles['nav-item']}>
-          <Link to='home' >
+          <Link to='/home' >
             <HomeIcon />
             Home
           </Link>
         </div>
         <div className={styles['nav-item']}>Neighbour</div>
-        <div className={styles['nav-item']}>
-          <Link to='landing-page/login'>
+        <div className={styles['nav-item']} onClick={() => login('eee', 'aaa')}>
+          <Link to='/login'>
             <ForwardArrowIcon />
             Login
           </Link>
         </div>
         <div className={styles['nav-item']} onClick={() => logout()}>
-          <Link to='logout'>
+          <Link to='/logout'>
             <Icons name='BackArrowIcon'/>
             Logout
           </Link>
